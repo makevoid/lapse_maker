@@ -1,14 +1,22 @@
+require 'rmagick'
+require_relative "avconv"
+
 class LapseMaker
+  
+  include RMagick
+
+  IMAGES_GLOB = "images/*.jpg"
 
   @@images = []
 
   def make # (main)
     apply_filters
-    
+    rename_images
+    create_video
   end
 
   def get_images
-    @@images <<
+    @@images << Dir.glob IMAGES_GLOB
   end
   
   # app version:
@@ -18,7 +26,7 @@ class LapseMaker
   # end
   
   def sequence_images
-    
+  
   end
 
   def apply_filters
@@ -34,11 +42,26 @@ class LapseMaker
   end
   
   def apply_filters_one(image)
-    # RMagick
+    img = Image.new image
+    img.write "1.jpg"
+    exit
+  end
+  
+  def rename_images
+    files =  Dir.glob IMAGES_GLOB
+
+    files.sort.each_with_index do |file, idx|
+      idx += 1
+      idx = idx.to_s.rjust 4, "0"
+      `mv #{file} lapse_#{idx}.jpg`
+    end
+    
+    "lapse_"
   end
 
-  def ffmpeg
-    exec "ffmpeg ..."
+  def create_video
+    exec "avconv -f image2 -i lapse_%04d.jpg -s hd1080 -threads 8 out.mp4
+    "
   end
 
   def save_video
@@ -47,8 +70,11 @@ class LapseMaker
 
   protected
 
-  def exec
-    
+  def exec(cmd)
+    puts "executing: #{cmd}"
+    out = `#{cmd}`
+    puts out
+    out
   end
   
 end
